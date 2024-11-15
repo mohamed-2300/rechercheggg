@@ -1,58 +1,61 @@
 import React, { useState } from 'react';
-import RecipeCard from './RecipeCard';
+import RecipeCard from './RecipeCard';  // Make sure the path is correct
 
 const APP_ID = '5dd1075a';
 const APP_KEY = 'c9dd31132112e634bac8c8312ee4374e';
 
 const App = () => {
-  const [recipes, setRecipes] = useState([]);
-  const [query, setQuery] = useState('');
+    const [recipes, setRecipes] = useState([]);
+    const [search, setSearch] = useState('');
 
-  // Mock data for testing
-  const mockData = [
-    {
-      recipe: {
-        label: "Chicken Vesuvio",
-        image: "https://www.edamam.com/web-img/e17/e1775fa635cbdfb8cbd9c586f8f48b74.jpg",
-        ingredients: [
-          { text: "1/2 cup olive oil" },
-          { text: "5 cloves garlic, peeled" },
-        ],
-        calories: 4228.04,
-        url: "http://www.seriouseats.com/recipes/2011/12/chicken-vesuvio-recipe.html",
-      },
-    },
-  ];
+    const fetchRecipes = async () => {
+        if (!search.trim()) {
+            alert('Veuillez entrer un mot-clé pour rechercher.');
+            return;
+        }
+        try {
+            const response = await fetch(
+                `https://api.edamam.com/search?q=${search}&app_id=${APP_ID}&app_key=${APP_KEY}`
+            );
 
-  // Replace this function with mock data for testing
-  const searchRecipes = () => {
-    setRecipes(mockData); // Use mock data instead of API
-  };
+            if (!response.ok) {
+                alert('Erreur lors de la récupération des données. Veuillez réessayer.');
+                return;
+            }
 
-  return (
-    <div className="p-4">
-      <div className="mb-4">
-        <input
-          type="text"
-          className="border p-2 rounded"
-          placeholder="Rechercher des recettes..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <button
-          className="bg-blue-500 text-white p-2 rounded ml-2"
-          onClick={searchRecipes}
-        >
-          Rechercher
-        </button>
-      </div>
-      <div className="grid grid-cols-3 gap-4">
-        {recipes.map((recipeData, index) => (
-          <RecipeCard key={index} recipe={recipeData.recipe} />
-        ))}
-      </div>
-    </div>
-  );
+            const data = await response.json();
+            setRecipes(data.hits.map((hit) => hit.recipe));
+        } catch (error) {
+            alert('Erreur lors de la récupération des données. Veuillez réessayer.');
+        }
+    };
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        fetchRecipes();
+    };
+
+    return (
+        <div className="App">
+            <form onSubmit={handleSearch} className="m-4">
+                <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Rechercher une recette..."
+                    className="border-2 border-gray-300 rounded p-2 mr-2"
+                />
+                <button type="submit" className="bg-blue-500 text-white p-2 rounded">
+                    Rechercher
+                </button>
+            </form>
+            <div className="grid grid-cols-3 gap-4">
+                {recipes.map((recipe, index) => (
+                    <RecipeCard key={index} recipe={recipe} />
+                ))}
+            </div>
+        </div>
+    );
 };
 
-export default App;
+export default App;
